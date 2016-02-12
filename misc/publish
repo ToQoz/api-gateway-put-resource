@@ -17,7 +17,7 @@ npm test
 
 # bump version
 _BUMP=`npm run -s release:bump`
-$RECOMMENDED=${1:-$_BUMP}
+RECOMMENDED=${1:-$_BUMP}
 /bin/echo -n "release: [major/minor/patch] (recommended:$RECOMMENDED) "
 read BUMP
 if [ -z "$BUMP" ]; then
