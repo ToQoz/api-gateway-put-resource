@@ -10,7 +10,9 @@
     "release:build-changelog": "conventional-changelog -p angular -i CHANGELOG.md -w",
     "release:github": "conventional-github-releaser -p angular"
   },
-  "dependencies": {},
+  "dependencies": {
+    "object-assign": "^4.0.1"
+  },
   "devDependencies": {
     "conventional-changelog": "^0.5.3",
     "conventional-github-releaser": "^0.5.3",
