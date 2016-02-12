@@ -103,13 +103,6 @@ APIGateway.prototype.list = function(cb, position, listedItems) {
     if (err) {
       cb(err, null);
     } else {
-      // drop unconcerned attributes
-      data.items.forEach(function(item) {
-        if (item.resourceMethods) {
-          delete item.resourceMethods;
-        }
-      });
-
       listedItems = listedItems.concat(data.items)
       if (data.position) {
         callee(cb, data.position, listedItems);

@@ -4,6 +4,8 @@ creates (or deletes) AWS API Gateway's resource if it doesn't exist.
 
 ## Usage
 
+example.js:
+
 ```javascript
 var AWS = require('aws-sdk');
 var credentials = new AWS.SharedIniFileCredentials({
@@ -33,6 +35,33 @@ putResource(
     }
   }
 );
+
+```
+$ node ./example.js
+{
+  "items": [
+    {
+      "id": "x",
+      "path": "/",
+      "resourceMethods": {
+        "GET": {}
+      }
+    },
+    {
+      "id": "y",
+      "parentId": "x",
+      "pathPart": "hi",
+      "path": "/hi"
+    },
+    {
+      "id": "z",
+      "parentId": "x",
+      "pathPart": "api-gateway",
+      "path": "/api-gateway"
+    }
+  ],
+  "deletedItems": []
+}
 ```
 
 ## API
@@ -59,6 +88,7 @@ This function creates (or deletes) AWS API Gateway's resource if it doesn't exis
           - parentId - `String`
           - pathPart - `String`
           - path - `String`
+          - resourceMethods - `map`
         - deletedItems - `Array<map>` - the deleted resources
           - id - `String`
           - parentId - `String`
