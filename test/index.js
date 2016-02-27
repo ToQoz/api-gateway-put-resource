@@ -73,3 +73,39 @@ test("put() with deleteOthers deletes resources that is not given as paths", fun
     }
   );
 });
+
+test("don't delete root resource", function (t) {
+  t.plan(5);
+
+  var apiGateway = new APIGateway();
+  putResource(
+    apiGateway,
+    {
+      restApiId: 'xxx',
+      path: [
+        '/hi'
+      ],
+    },
+    function() {
+      putResource(
+        apiGateway,
+        {
+          restApiId: 'xxx',
+          path: [],
+          deleteOthers: true
+        },
+        function(_, data) {
+          // check real data
+          t.deepEqual(apiGateway.resources.map(function(item) { return item.path; }), ['/']);
+          // check return value
+          t.deepEqual(data.items.map(function(item) { return item.path; }), []);
+          t.deepEqual(data.deletedItems.map(function(item) { return item.path; }), ['/hi']);
+
+          // check operations
+          t.equal(data.operations.length, 1);
+          t.deepEqual(data.operations[0].message, 'apiGateway: delete resource /hi');
+        }
+      );
+    }
+  );
+});

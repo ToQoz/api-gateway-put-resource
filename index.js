@@ -144,6 +144,8 @@ function _put(apiGateway, restApiId, existingItems, path, cb) {
 }
 
 function _del(apiGateway, restApiId, item, cb) {
+  if (item.path === '/') return cb(null, {operations: [], items: []});
+
   var params = {
     restApiId: restApiId,
     resourceId: item.id,
