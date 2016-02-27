@@ -1,3 +1,13 @@
+<a name="1.0.0"></a>
+# [1.0.0](https://github.com/ToQoz/api-gateway-put-resource/compare/v0.2.0...v1.0.0) (2016-02-27)
+
+
+### Features
+
+* **api-gateway-put-resource:** add dryRun option ([ebdec23](https://github.com/ToQoz/api-gateway-put-resource/commit/ebdec23))
+
+
+
 <a name="0.2.0"></a>
 # [0.2.0](https://github.com/ToQoz/api-gateway-put-resource/compare/v0.1.0...v0.2.0) (2016-02-27)
 
