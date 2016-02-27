@@ -18,10 +18,10 @@ test("put() creates paths if it is not exists", function (t) {
     },
     function(err, data) {
       // check real data
-      t.deepEqual(['/', '/hi', '/hi/api', '/api-gateway', '/api-gateway/hello'], apiGateway.resources.map(function(item) { return item.path; }));
+      t.deepEqual(apiGateway.resources.map(function(item) { return item.path; }), ['/', '/hi', '/hi/api', '/api-gateway', '/api-gateway/hello']);
       // check return value
-      t.deepEqual(['/', '/hi', '/hi/api', '/api-gateway', '/api-gateway/hello'], data.items.map(function(item) { return item.path; }));
-      t.deepEqual([], data.deletedItems);
+      t.deepEqual(data.items.map(function(item) { return item.path; }), ['/', '/hi', '/hi/api', '/api-gateway', '/api-gateway/hello']);
+      t.deepEqual(data.deletedItems, []);
     }
   );
 });
