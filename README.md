@@ -103,7 +103,7 @@ This function creates (or deletes) AWS API Gateway's resource if it doesn't exis
     - Arguments (cb)
       - err - `Error` - the error object from aws-sdk. Set to `null` if the operation is successful.
       - data - `map` - the data from aws-sdk. Set to `null` if the operation error occur.
-        - items - `Array<map>` - the created resources
+        - items - `Array<map>` - the resources that are targets of the operation
           - id - `String`
           - parentId - `String`
           - pathPart - `String`
