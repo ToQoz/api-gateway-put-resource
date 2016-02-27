@@ -1,7 +1,7 @@
 {
   "name": "api-gateway-put-resource",
   "description": "creates AWS API Gateway's resource if it doesn't exist",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "main": "index.js",
   "scripts": {
     "test": "tape test/*.js"
