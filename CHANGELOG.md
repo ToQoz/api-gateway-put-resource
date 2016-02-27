@@ -1,3 +1,17 @@
+<a name="0.2.0"></a>
+# [0.2.0](https://github.com/ToQoz/api-gateway-put-resource/compare/v0.1.0...v0.2.0) (2016-02-27)
+
+
+### Bug Fixes
+
+* **put-api-gateway-put-resource:** don't delete root resource ([1342685](https://github.com/ToQoz/api-gateway-put-resource/commit/1342685))
+
+### Features
+
+* **api-gateway-put-resource:** return logged api operations ([e1ec9ed](https://github.com/ToQoz/api-gateway-put-resource/commit/e1ec9ed))
+
+
+
 <a name="0.1.0"></a>
 # [0.1.0](https://github.com/ToQoz/api-gateway-put-resource/compare/v0.1.0...v0.1.0) (2016-02-27)
 
