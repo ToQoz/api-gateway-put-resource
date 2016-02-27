@@ -25,6 +25,7 @@ module.exports = function(apiGateway, params, cb) {
     .sort(function(a, b) {
       return a.length - b.length;
     });
+  delete params.path;
 
   var deleteOthers = params.deleteOthers && function(putResult, existingItems, cb) {
     del(apiGateway, params, sub(existingItems, putResult.items), function(err, data) {
@@ -33,11 +34,13 @@ module.exports = function(apiGateway, params, cb) {
       } else {
         cb(null, {
           items: putResult.items,
-          deletedItems: data.items
+          deletedItems: data.items,
+          operations: putResult.operations.concat(data.operations)
         });
       }
     });
   };
+  delete params.deleteOthers;
 
   list(apiGateway, params, function(err, existingItems) {
     if (err) {
@@ -59,26 +62,15 @@ function del(apiGateway, params, items, cb) {
     } else {
       del(apiGateway, params, items.slice(1), function(err, ndata) {
         if (err) cb(err, null);
-        else cb(null, {items: data.items.concat(ndata.items)});
+        else cb(null, concatData(data, ndata));
       });
     }
   };
 
   if (items.length === 0) {
-    cb(null, {items: []});
+    cb(null, {items: [], operations: []});
   } else {
-    var item = items[0];
-
-    apiGateway.deleteResource(
-      {
-        restApiId: params.restApiId,
-        resourceId: item.id,
-      },
-      function(err, data) {
-        if (err) next(err, null);
-        else next(null, {items: [item]});
-      }
-    );
+    _del(apiGateway, params.restApiId, items[0], next);
   }
 }
 
@@ -95,40 +87,15 @@ function put(apiGateway, params, existingItems, paths, cb) {
     } else {
       put(apiGateway, params, existingItems, paths.slice(1), function(err, ndata) {
         if (err) cb(err, null);
-        else cb(null, {items: data.items.concat(ndata.items)});
+        else cb(null, concatData(data, ndata));
       });
     }
-  }.bind(this);
+  };
 
   if (paths.length === 0) {
-    cb(null, {items: []});
+    cb(null, {items: [], operations: []});
   } else {
-    var path = paths[0];
-
-    var s = split(path);
-    var parentPath = s[0]
-    var pathPart = s[1]
-    var res = find(existingItems, path);
-    if (res) {
-      next(null, {items: [res]});
-    } else {
-      var parent = find(existingItems, parentPath);
-      if (parent.path === path) { // root
-        parent = null;
-      }
-
-      apiGateway.createResource(
-        {
-          restApiId: this.restApiId,
-          parentId: parent && parent.id,
-          pathPart: pathPart
-        },
-        function(err, data) {
-          if (err) next(err, null);
-          else next(null, {items: [data]});
-        }
-      );
-    }
+    _put(apiGateway, params.restApiId, existingItems, paths[0], next);
   }
 }
 
@@ -150,6 +117,50 @@ function list(apiGateway, params, cb) {
   apiGateway.getResources(params, next);
 }
 
+function _put(apiGateway, restApiId, existingItems, path, cb) {
+  var s = split(path);
+  var parentPath = s[0];
+  var pathPart = s[1];
+  var res = find(existingItems, path);
+  if (res) return cb(null, {items: [res], operations: []});
+
+  var parentId = path === '/' ? undefined : find(existingItems, parentPath).id;
+  var params = {
+    restApiId: restApiId,
+    parentId: parentId,
+    pathPart: pathPart
+  };
+
+  var operation = {
+    op: 'apiGateway.createResource',
+    params: params,
+    message: 'apiGateway: create resource ' + path
+  };
+
+  apiGateway.createResource(params, function(err, data) {
+    if (err) cb(err, null);
+    else cb(null, {items: [data], operations: [operation]});
+  });
+}
+
+function _del(apiGateway, restApiId, item, cb) {
+  var params = {
+    restApiId: restApiId,
+    resourceId: item.id,
+  };
+
+  var operation = {
+    op: 'apiGateway.deleteResource',
+    params: params,
+    message: "apiGateway: delete resource " + item.path,
+  };
+
+  apiGateway.deleteResource(params, function(err, data) {
+    if (err) cb(err, null);
+    else cb(null, {operations: [operation], items: [item]});
+  });
+}
+
 // splits path to parentPath and pathPart
 function split(path) {
   var segments = path.split('/');
@@ -168,4 +179,11 @@ function sub(a, b) {
   return a.filter(function(aa) {
     return !find(b, aa.path);
   });
+}
+
+function concatData(data1, data2) {
+  return {
+    items: data1.items.concat(data2.items),
+    operations: data1.operations.concat(data2.operations)
+  };
 }

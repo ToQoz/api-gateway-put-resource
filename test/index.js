@@ -4,7 +4,7 @@ var APIGateway = require('./api_gateway');
 var putResource = require('..');
 
 test("put() creates paths if it is not exists", function (t) {
-  t.plan(3);
+  t.plan(8);
 
   var apiGateway = new APIGateway();
   putResource(
@@ -22,12 +22,19 @@ test("put() creates paths if it is not exists", function (t) {
       // check return value
       t.deepEqual(data.items.map(function(item) { return item.path; }), ['/', '/hi', '/hi/api', '/api-gateway', '/api-gateway/hello']);
       t.deepEqual(data.deletedItems, []);
+
+      // check operations
+      t.equal(data.operations.length, 4);
+      t.deepEqual(data.operations[0].message, 'apiGateway: create resource /hi');
+      t.deepEqual(data.operations[1].message, 'apiGateway: create resource /hi/api');
+      t.deepEqual(data.operations[2].message, 'apiGateway: create resource /api-gateway');
+      t.deepEqual(data.operations[3].message, 'apiGateway: create resource /api-gateway/hello');
     }
   );
 });
 
 test("put() with deleteOthers deletes resources that is not given as paths", function (t) {
-  t.plan(3);
+  t.plan(7);
 
   var apiGateway = new APIGateway();
   putResource(
@@ -55,6 +62,12 @@ test("put() with deleteOthers deletes resources that is not given as paths", fun
           // check return value
           t.deepEqual(data.items.map(function(item) { return item.path; }), ['/', '/api-gateway']);
           t.deepEqual(data.deletedItems.map(function(item) { return item.path; }), ['/hi', '/hi/api', '/api-gateway/hello']);
+
+          // check operations
+          t.equal(data.operations.length, 3);
+          t.deepEqual(data.operations[0].message, 'apiGateway: delete resource /hi');
+          t.deepEqual(data.operations[1].message, 'apiGateway: delete resource /hi/api');
+          t.deepEqual(data.operations[2].message, 'apiGateway: delete resource /api-gateway/hello');
         }
       );
     }

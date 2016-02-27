@@ -60,7 +60,27 @@ $ node ./example.js
       "path": "/api-gateway"
     }
   ],
-  "deletedItems": []
+  "deletedItems": [],
+  "operations": [
+    {
+      "op": "apiGateway.createResource",
+      "params": {
+        "restApiId": "xxx",
+        "parentId": "x",
+        "pathPart": "hi"
+      },
+      "message": "apiGateway: create resource /hi"
+    },
+    {
+      "op": "apiGateway.createResource",
+      "params": {
+        "restApiId": "xxx",
+        "parentId": "x",
+        "pathPart": "api-gateway"
+      },
+      "message": "apiGateway: create resource /api-gateway"
+    }
+  ]
 }
 ```
 
@@ -94,3 +114,7 @@ This function creates (or deletes) AWS API Gateway's resource if it doesn't exis
           - parentId - `String`
           - pathPart - `String`
           - path - `String`
+        - operations - `Array<map>`
+          - op - `String` - like a `"apiGateway.createResource"`
+          - params - `map` - like a `{restApiId: 'xxx', path: '/foo'}`
+          - message - `String` - like a `"apiGateway: create resource /foo"`
