@@ -109,3 +109,45 @@ test("don't delete root resource", function (t) {
     }
   );
 });
+
+test("dry run", function (t) {
+  t.plan(7);
+
+  var apiGateway = new APIGateway();
+  putResource(
+    apiGateway,
+    {
+      restApiId: 'xxx',
+      path: [
+        '/api-gateway',
+        '/api-gateway/hello',
+      ],
+    },
+    function(_, data) {
+      putResource(
+        apiGateway,
+        {
+          restApiId: 'xxx',
+          path: [
+            '/bye',
+          ],
+          deleteOthers: true,
+          dryRun: true,
+        },
+        function(_, data) {
+          // check real data
+          t.deepEqual(apiGateway.resources.map(function(item) { return item.path; }), ['/', '/api-gateway', '/api-gateway/hello']);
+          // check return value
+          t.equal(data.items.length, 1); // only root
+          t.equal(data.deletedItems.length, 0);
+
+          // check operations
+          t.equal(data.operations.length, 3);
+          t.deepEqual(data.operations[0].message, '(dryrun) apiGateway: create resource /bye');
+          t.deepEqual(data.operations[1].message, '(dryrun) apiGateway: delete resource /api-gateway');
+          t.deepEqual(data.operations[2].message, '(dryrun) apiGateway: delete resource /api-gateway/hello');
+        }
+      );
+    }
+  );
+});

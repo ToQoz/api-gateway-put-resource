@@ -99,6 +99,7 @@ This function creates (or deletes) AWS API Gateway's resource if it doesn't exis
   - params - **required** - `map`
     - path - **required** - `Array<String> | String`
     - deleteOthers: - defaults to false - `Boolean`
+    - dryRun: - defaults to false - `Boolean`
   - cb - `function(err, data) {}` - called with following arguments on the end of operation
     - Arguments (cb)
       - err - `Error` - the error object from aws-sdk. Set to `null` if the operation is successful.

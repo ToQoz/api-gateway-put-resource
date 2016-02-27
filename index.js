@@ -1,7 +1,11 @@
+var assert = require('assert');
 var assign = require('object-assign');
 
 module.exports = function(apiGateway, params, cb) {
   params = assign({}, params);
+
+  var dryRun = params.dryRun;
+  delete params.dryRun;
 
   // Array<String>|String -> Array<String>
   if (!Array.isArray(params.path)) {
@@ -28,7 +32,7 @@ module.exports = function(apiGateway, params, cb) {
   delete params.path;
 
   var deleteOthers = params.deleteOthers && function(putResult, existingItems, cb) {
-    del(apiGateway, params, sub(existingItems, putResult.items), function(err, data) {
+    del(apiGateway, params, sub(existingItems, putResult.items), dryRun, function(err, data) {
       if (err) {
         cb(err, null);
       } else {
@@ -46,7 +50,7 @@ module.exports = function(apiGateway, params, cb) {
     if (err) {
       cb(err, null);
     } else {
-      put(apiGateway, params, existingItems, paths, function(err, data) {
+      put(apiGateway, params, existingItems, paths, dryRun, function(err, data) {
         if (err) cb(err, null);
         else if (deleteOthers) deleteOthers(data, existingItems, cb);
         else cb(null, assign(data, {deletedItems: []}));
@@ -55,12 +59,12 @@ module.exports = function(apiGateway, params, cb) {
   });
 };
 
-function del(apiGateway, params, items, cb) {
+function del(apiGateway, params, items, dryRun, cb) {
   var next = function(err, data) {
     if (err) {
       cb(err, null);
     } else {
-      del(apiGateway, params, items.slice(1), function(err, ndata) {
+      del(apiGateway, params, items.slice(1), dryRun, function(err, ndata) {
         if (err) cb(err, null);
         else cb(null, concatData(data, ndata));
       });
@@ -70,11 +74,11 @@ function del(apiGateway, params, items, cb) {
   if (items.length === 0) {
     cb(null, {items: [], operations: []});
   } else {
-    _del(apiGateway, params.restApiId, items[0], next);
+    _del(apiGateway, params.restApiId, items[0], dryRun, next);
   }
 }
 
-function put(apiGateway, params, existingItems, paths, cb) {
+function put(apiGateway, params, existingItems, paths, dryRun, cb) {
   var next = function(err, data) {
     data.items.forEach(function(item) {
       if (!find(existingItems, item.path)) {
@@ -85,7 +89,7 @@ function put(apiGateway, params, existingItems, paths, cb) {
     if (err) {
       cb(err, null);
     } else {
-      put(apiGateway, params, existingItems, paths.slice(1), function(err, ndata) {
+      put(apiGateway, params, existingItems, paths.slice(1), dryRun, function(err, ndata) {
         if (err) cb(err, null);
         else cb(null, concatData(data, ndata));
       });
@@ -95,7 +99,7 @@ function put(apiGateway, params, existingItems, paths, cb) {
   if (paths.length === 0) {
     cb(null, {items: [], operations: []});
   } else {
-    _put(apiGateway, params.restApiId, existingItems, paths[0], next);
+    _put(apiGateway, params.restApiId, existingItems, paths[0], dryRun, next);
   }
 }
 
@@ -117,14 +121,23 @@ function list(apiGateway, params, cb) {
   apiGateway.getResources(params, next);
 }
 
-function _put(apiGateway, restApiId, existingItems, path, cb) {
+function _put(apiGateway, restApiId, existingItems, path, dryRun, cb) {
   var s = split(path);
   var parentPath = s[0];
   var pathPart = s[1];
   var res = find(existingItems, path);
   if (res) return cb(null, {items: [res], operations: []});
 
-  var parentId = path === '/' ? undefined : find(existingItems, parentPath).id;
+  var parentId;
+  if (path !== '/') {
+    var parent = find(existingItems, parentPath);
+    if (!parent && dryRun) {
+      parentId = '(dryrun) not created yet';
+    } else {
+      parentId = parent.id;
+    }
+    assert(parentId, 'bug: parentId should not be empty');
+  }
   var params = {
     restApiId: restApiId,
     parentId: parentId,
@@ -137,13 +150,18 @@ function _put(apiGateway, restApiId, existingItems, path, cb) {
     message: 'apiGateway: create resource ' + path
   };
 
-  apiGateway.createResource(params, function(err, data) {
-    if (err) cb(err, null);
-    else cb(null, {items: [data], operations: [operation]});
-  });
+  if (dryRun) {
+    operation.message = '(dryrun) ' + operation.message;
+    cb(null, {items: [], operations: [operation]});
+  } else {
+    apiGateway.createResource(params, function(err, data) {
+      if (err) cb(err, null);
+      else cb(null, {items: [data], operations: [operation]});
+    });
+  }
 }
 
-function _del(apiGateway, restApiId, item, cb) {
+function _del(apiGateway, restApiId, item, dryRun, cb) {
   if (item.path === '/') return cb(null, {operations: [], items: []});
 
   var params = {
@@ -157,10 +175,15 @@ function _del(apiGateway, restApiId, item, cb) {
     message: "apiGateway: delete resource " + item.path,
   };
 
-  apiGateway.deleteResource(params, function(err, data) {
-    if (err) cb(err, null);
-    else cb(null, {operations: [operation], items: [item]});
-  });
+  if (dryRun) {
+    operation.message = '(dryrun) ' + operation.message;
+    cb(null, {items: [], operations: [operation]});
+  } else {
+    apiGateway.deleteResource(params, function(err, data) {
+      if (err) cb(err, null);
+      else cb(null, {operations: [operation], items: [item]});
+    });
+  }
 }
 
 // splits path to parentPath and pathPart
