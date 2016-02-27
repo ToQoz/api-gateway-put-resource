@@ -35,6 +35,7 @@ putResource(
     }
   }
 );
+```
 
 ```
 $ node ./example.js
